@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Investment Tracker</title>
+  <!-- Includi Vue.js -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <!-- Includi Axios per le richieste HTTP -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <!-- Includi Bootstrap per la UI -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Aggiungi stile CSS -->
+  <style>
+    #stockTable {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app" class="container mt-4">
+  <h1 class="mb-4">Investment Tracker</h1>
+
+  <div class="mb-4">
+    <label for="investmentAmount">Importo Investito:</label>
+    <input type="number" v-model="investmentAmount" id="investmentAmount" class="form-control">
+  </div>
+
+  <div class="mb-4">
+    <label for="currentValue">Valore Attuale:</label>
+    <input type="number" v-model="currentValue" id="currentValue" class="form-control">
+  </div>
+
+  <div class="mb-4">
+    <label for="profitLoss">Profitto/Perdita:</label>
+    <input type="number" v-model="profitLoss" id="profitLoss" class="form-control" readonly>
+  </div>
+
+  <button @click="calculateProfitLoss" class="btn btn-primary">Calcola Profitto/Perdita</button>
+
+  <table id="stockTable" class="table">
+    <thead>
+      <tr>
+        <th>Simbolo</th>
+        <th>Prezzo Attuale</th>
+        <th>Ultimo Aggiornamento</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="stock in stocks" :key="stock.symbol">
+        <td>{{ stock.symbol }}</td>
+        <td>{{ stock.price }}</td>
+        <td>{{ stock.lastUpdated }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  new Vue({
+    el: '#app',
+    data: {
+      investmentAmount: 0,
+      currentValue: 0,
+      profitLoss: 0,
+      stocks: []
+    },
+    methods: {
+      calculateProfitLoss: function () {
+        this.profitLoss = this.currentValue - this.investmentAmount;
+      },
+      fetchStockData: function () {
+        axios.get('https://www.alphavantage.co/query', {
+          params: {
+            function: 'GLOBAL_QUOTE',
+            symbol: 'AAPL', // Puoi cambiare il simbolo a tuo piacimento
+            apikey: 'TUA_CHIAVE_API'
+          }
+        })
+        .then(response => {
+          const stockData = response.data['Global Quote'];
+          this.stocks = [{
+            symbol: stockData['01. symbol'],
+            price: stockData['05. price'],
+            lastUpdated: stockData['07. latest trading day']
+          }];
+        })
+        .catch(error => {
+          console.error('Errore nella richiesta API:', error);
+        });
+      }
+    },
+    mounted: function () {
+      this.fetchStockData();
+    }
+  });
+</script>
+
+</body>
+</html>
